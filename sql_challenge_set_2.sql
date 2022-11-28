@@ -256,6 +256,132 @@ SELECT x, y,z ,
        end as triangle
 from triangle;
 
+-- Q 62
+
+CREATE Table actorDirector
+(
+    actor_id INT,
+    director_id INT,
+    time_stamp INT PRIMARY KEY
+);
+
+-- Q 63
+CREATE Table sales
+(
+    sale_id INT,
+    prd_id INT,
+    year INT,
+    qty INT,
+    price INT,
+    constraint pk PRIMARY KEY (sale_id ,year)
+);
+
+CREATE Table product
+(
+    prod_id INT PRIMARY KEY,
+    prod_name VARCHAR(25)
+);
+
+INSERT INTO sales VALUES (1,100,2008,10,5000),(2,100,2009,12,5000),(7,200,2011,15,9000);
+
+INSERT INTO product VALUES (100,'Nokia'),(200,'Apple'),(300,'Samsung');
+
+-- Write an SQL query that reports the product_name, year, and price for each sale_id in the Sales table.
+-- Return the resulting table in any order.
+SELECT p.prod_name , s.year , s.price
+from product p
+JOIN sales s
+ON p.prod_id = s.prd_id
+;
+
+-- Q 64
+
+CREATE TABLE project
+(
+    project_id INT,
+    emp_id INT,
+    constraint pk PRIMARY KEY (project_id , emp_id)
+);
+
+CREATE Table employee
+(
+    emp_id INT PRIMARY KEY,
+    name VARCHAR(50),
+    exp_yrs INT
+);
+
+INSERT INTO project VALUES (1,1),(1,2),(1,3),(2,1),(2,4);
+
+INSERT INTO employee VALUES (1,'Khaled',3),(2,'Ali',2),(3,'John',1),(4,'Doe',2);
+
+-- Write an SQL query that reports the average experience years of all the employees for each project,
+-- rounded to 2 digits
+
+SELECT p.project_id , 
+       round(avg(e.exp_yrs), 2) as avg_xp_yrs
+from project p
+JOIN employee e
+ON p.emp_id = e.emp_id
+GROUP BY p.project_id
+;
+
+-- Q 65
+CREATE Table Product
+(
+    prod_id INT PRIMARY KEY,
+    prod_name VARCHAR(50),
+    unit_price INT
+
+);
+
+CREATE Table Sales
+(
+    seller_id INT,
+    prod_id INT,
+    buyer_id INT,
+    sale_date DATE,
+    qty INT,
+    price INT
+);
+INSERT INTO Product VALUES (1,'S8',1000),(2,'G4',800),(3,'iPhone',1400);
+INSERT INTO Sales VALUES (1,1,1,'2019-01-21',2,2000),(1,2,2,'2019-02-17',1,800),(2,2,3,'2019-06-02',1,800),(3,3,4,'2019-05-13',2,2800);
+
+-- Write an SQL query that reports the best seller by total sales price, If there is a tie, report them all.
+-- Return the result table in any order
+
+with t1 as(
+    SELECT seller_id , SUM(price) as total_amt
+    from Sales
+    GROUP BY seller_id),
+t2 as (
+    SELECT seller_id , dense_rank() over(ORDER BY total_amt DESC) as ranking
+    from t1)
+
+SELECT seller_id
+from t2
+WHERE ranking = 1
+;
+
+-- Q 66
+
+INSERT INTO Sales VALUES (1,1,1,'2019-01-21',2,2000),(1,2,2,'2019-02-17',1,800),(2,1,3,'2019-06-02',1,800),(3,3,3,'2019-05-13',2,2800);
+
+--  Write an SQL query that reports the buyers who have bought S8 but not iPhone. Note that S8 and
+-- iPhone are products present in the Product table
+
+with t1 as(
+    SELECT case when p.prod_name ='S8' then buyer_id else -1 end as s8_buyer,
+           case when p.prod_name ='iPhone' then buyer_id else -1 end as iPhone_buyer
+    from Sales s
+    JOIN Product p
+    ON p.prod_id = s.prod_id)
+
+SELECT buyer_id 
+from Sales
+WHERE buyer_id IN (SELECT s8_buyer from t1) 
+AND buyer_id NOT IN (SELECT iPhone_buyer from t1)
+;
+
 
 
 
