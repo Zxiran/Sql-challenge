@@ -382,6 +382,109 @@ WHERE buyer_id IN (SELECT s8_buyer from t1)
 AND buyer_id NOT IN (SELECT iPhone_buyer from t1)
 ;
 
+-- Q 67
+CREATE Table customer
+(
+    cust_id INT,
+    name VARCHAR(50),
+    visited_on DATE,
+    amt INT,
+    constraint pk PRIMARY KEY (cust_id , visited_on)
+);
+
+INSERT INTO customer VALUES (1,'Jhon','2019-01-01',100),(2,'Daniel','2019-01-02',110),(3,'Jade','2019-01-03',120),(4,'Khaled','2019-01-04',130),(5,'Winston','2019-01-05',110),(6,'Elvis','2019-01-06',140),(7,'Anna','2019-01-07',150),(8,'Maria','2019-01-08',80),(9,'Jaze','2019-01-09',110),(1,'Jhon','2019-01-10',130),(3,'Jade','2019-01-10',150);
+
+SELECT visited_on , SUM(amt) over(ORDER BY  range between 6 preceding and current row)
+FROM customer;
+
+-- Q 68
+
+CREATE Table scores
+(
+    player_name VARCHAR(50),
+    gender VARCHAR(2),
+    day DATE,
+    score_points INT,
+    constraint pk PRIMARY KEY (gender ,day)
+);
+
+INSERT INTO scores VALUES ('Aron','F','2020-01-01',17),('Alice','F','2020-01-07',23),('Bajrang','M','2020-01-07',7),('Khali','M','2019-12-25',11),('Slaman','M','2019-12-30',13),('Joe','M','2019-12-31',3),('Jose','M','2019-12-18',2),('Priya','F','2019-12-31',23),('Priyanka','F','2019-12-30',17);
+
+-- Write an SQL query to find the total score for each gender on each day.
+-- Return the result table ordered by gender and day in ascending order.
+SELECT gender , day , 
+       SUM(score_points) over(partition by gender ORDER BY day ) as total 
+from scores;
+
+-- Q 69
+
+-- Q 70
+
+CREATE Table students
+(
+    stu_id int PRIMARY KEY,
+    stu_name VARCHAR(50) 
+
+);
+
+CREATE Table subjects
+(
+    sub_name VARCHAR(25) PRIMARY KEY
+);
+
+CREATE Table examinations
+(
+    stu_id INT,
+    sub_name VARCHAR(50)
+);
+
+INSERT INTO students VALUES  (1,'Alice'),(2,'Bob'),(13,'John'),(6,'Alex');
+
+INSERT INTO subjects VALUES ('Math'),('Physics'),('Programming');
+
+INSERT INTO examinations VALUES (1,'Math'),(1,'Physics'),(1,'Programming'),(2,'Programming'),(1,'Physics'),(1,'Math'),(13,'Math'),(13,'Programming'),(13,'Physics'),(2,'Math'),(1,'Math');
+
+-- Q 70) Write an SQL query to find the number of times each student attended each exam.
+-- Return the result table ordered by student_id and subject_name
+
+SELECT s.stu_id , s.stu_name , e.sub_name 
+from students s
+LEFT JOIN examinations e
+ON e.stu_id = s.stu_id
+ JOIN subjects sub
+ON sub.sub_name = e.sub_name
+-- GROUP BY s.stu_id , s.stu_name , e.sub_name
+;
+
+SELECT s.stu_id , s.stu_name , e.sub_name 
+from students s
+LEFT JOIN examinations e
+ON e.stu_id = s.stu_id;
+RIGHT JOIN subjects sub
+ON ;
+
+with t1 as (
+    SELECT * from students,subjects
+    ),
+
+t2 as(
+    SELECT stu_id , sub_name , count(*) as attended_exams
+    from examinations
+    GROUP BY stu_id , sub_name
+    )
+
+SELECT t1.stu_id ,s.stu_name, t1.sub_name , 
+       coalesce(t2.attended_exams , 0)
+from t1 
+LEFT JOIN t2
+ON t1.stu_id = t2.stu_id 
+AND 
+t1.sub_name =t2.sub_name 
+JOIN students s
+ON t1.stu_id = s.stu_id
+ORDER BY t1.stu_id , t1.sub_name
+;
+
 
 
 
