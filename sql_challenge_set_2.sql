@@ -485,6 +485,146 @@ ON t1.stu_id = s.stu_id
 ORDER BY t1.stu_id , t1.sub_name
 ;
 
+-- Q 71
+CREATE TABLE employees
+(
+    emp_id INT PRIMARY KEY,
+    emp_name VARCHAR(50),
+    mgr_id INT
+);
+
+INSERT INTO employees VALUES (1,'Boss',1),(3,'Alice',3),(2,'Bob',1),(4,'Daniel',2),(7,'Luis',4),(8,'Jhon',3),(9,'Angela',8),(77,'Robert',1); 
+
+-- Write an SQL query to find employee_id of all employees that directly or indirectly report their work to
+-- the head of the company
+with recursive reporting (emp_id )
+as (
+    SELECT emp_id 
+    from employees 
+    WHERE mgr_id=1
+    UNION
+    SELECT e.emp_id 
+    from reporting r
+    JOIN employees e
+    ON e.mgr_id = r.emp_id
+    
+)
+
+SELECT * from reporting 
+WHERE emp_id !=1 ;
+
+-- Q 72
+CREATE TABLE transactions
+(
+    id INT PRIMARY KEY,
+    country VARCHAR(50),
+    state ENUM('approved' ,'declined'),
+    amt INT,
+    trans_date DATE
+);
+
+INSERT INTO transactions VALUES (121,'US','approved',1000,'2018-12-18'),(122,'US','declined',2000,'2018-12-19'),(123,'US','approved',2000,'2019-01-01'),(124,'DE','approved',2000,'2019-01-07');
+
+-- Write an SQL query to find for each month and country, the number of transactions and their total
+-- amount, the number of approved transactions and their total amount.
+-- Return the result table in any order.
+
+SELECT country,LEFT(trans_date,7),COUNT(*) as trans_count , 
+SUM(case when state=1 then 1 end) as approved_count,
+SUM(amt) as trans_total_amount,
+SUM(case when state=1 then amt else 0 end) as approved_total_amt
+from transactions
+GROUP BY country , 
+         LEFT(trans_date,7);
+
+
+-- Q 73
+CREATE Table actions
+(
+    user_id INT,
+    post_id INT,
+    action_date DATE,
+    action ENUM('view', 'like', 'reaction', 'comment', 'report', 'share'),
+    extra VARCHAR(20)
+);
+
+CREATE Table removals
+(
+    post_id INT PRIMARY KEY,
+    remove_date DATE
+);
+
+INSERT INTO actions VALUES 
+(1,1,'2019-07-01','view',null),(1,1,'2019-07-01','like',null),(1,1,'2019-07-01','share',null),(2,2,'2019-07-04','view',null),(2,2,'2019-07-04','report','spam'),(3,4,'2019-07-04','view',null),(3,4,'2019-07-04','report','spam'),(4,3,'2019-07-02','view',null),(4,3,'2019-07-02','report','spam'),(5,2,'2019-07-03','view',null),(5,2,'2019-07-03','report','racism'),(5,5,'2019-07-03','view',null),(5,5,'2019-07-03','report','racism');
+
+INSERT INTO removals VALUES (2,'2019-07-20'),(3,'2019-07-18');
+
+-- Q 73) Write an SQL query to find the average daily percentage of posts that got removed after being
+-- reported as spam, rounded to 2 decimal places.
+
+
+
+with reported_post as(
+    SELECT DISTINCT post_id , action_date   
+    from actions
+    WHERE  action=5 AND extra='spam'
+    ),
+
+daily_report_remove as( 
+    SELECT action_date , 
+    (
+        SUM(CASE when post_id in (SELECT post_id from removals) then 1 else 0 end) *100 / 
+        Count(*)
+        )
+     as percent_removed_post 
+from reported_post
+GROUP BY action_date)
+
+SELECT round(avg(percent_removed_post),2)
+from daily_report_remove
+;
+
+
+-- Q 74 Question repeated (Already solved in set 1)
+
+-- Q 75 Question same as 74
+
+-- Q 76
+
+CREATE Table salaries
+(
+    cmp_id INT,
+    emp_id INT ,
+    emp_name VARCHAR(50) ,
+    salary INT ,
+    constraint pk PRIMARY KEY (cmp_id , emp_id)
+);
+
+INSERT INTO salaries VALUES (1,1,'Tony',2000),(1,2,'Pronub',21300),(1,3,'Tyrrox',10800),(2,1,'Pam',300),(2,7,'Bassem',450),(2,9,'Hermione',700),(3,7,'Bocaben',100),(3,2,'Ognjen',2200),(3,13,'Nyan Cat',3300),(3,15,'Morning Cat',7777);
+
+
+-- Write an SQL query to find the salaries of the employees after applying taxes. Round the salary to the
+-- nearest integer.
+-- The tax rate is calculated for each company based on the following criteria:
+-- ● 0% If the max salary of any employee in the company is less than $1000.
+-- ● 24% If the max salary of any employee in the company is in the range [1000, 10000] inclusive.
+-- ● 49% If the max salary of any employee in the company is greater than $10000.
+
+with t1 as (
+    SELECT cmp_id , emp_id ,emp_name,salary,
+    MAX(salary) over(partition by cmp_id) as max_salary 
+    from salaries
+)
+
+SELECT cmp_id , emp_id ,emp_name ,
+        case 
+        when max_salary >10000 then round(salary - (salary * 0.49),0)
+        when max_salary BETWEEN 1000 AND 10000 then round(salary - (salary * 0.24) ,0) 
+        else round(salary,0)
+        end as salary_after_tax
+FROM t1
+;
+
 
 
 
